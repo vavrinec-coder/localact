@@ -109,17 +109,30 @@
         }
 
         let count = 0;
-        for (let row = 0; row < usedRange.rowCount; row += 1) {
-          for (let column = 0; column < usedRange.columnCount; column += 1) {
-            const formula = String(usedRange.formulas[row][column] || "");
-            if (isLocalActFormula(formula)) {
-              usedRange.getCell(row, column).values = [[usedRange.values[row][column]]];
-              count += 1;
+        let formulaCount = 0;
+        const replacementValues = usedRange.formulas.map((rowValues, row) =>
+          rowValues.map((formulaValue, column) => {
+            const formula = String(formulaValue || "");
+            if (formula) {
+              formulaCount += 1;
             }
-          }
+            if (isLocalActFormula(formula)) {
+              count += 1;
+              return usedRange.values[row][column];
+            }
+            return formulaValue;
+          })
+        );
+
+        if (count > 0) {
+          usedRange.formulas = replacementValues;
         }
         await context.sync();
-        addLog("ok", "Formulas converted", `${count} LocalAct formulas converted on the active worksheet.`);
+        addLog(
+          "ok",
+          count > 0 ? "Formulas converted" : "No LocalAct formulas found",
+          `${count} LocalAct formulas converted on the active worksheet. ${formulaCount} total formulas scanned.`
+        );
       });
     } catch (error) {
       addLog("error", "Formula conversion failed", error instanceof Error ? error.message : String(error));
@@ -127,7 +140,7 @@
   }
 
   function isLocalActFormula(formula) {
-    return /LOCALACT\.(LOAD_PL|LOAD_BS|LOAD_PL_DEPT|LOAD_OPS)\s*\(/i.test(formula);
+    return /(?:^|[=@])\s*(?:_xlfn\.)?LOCALACT\.(LOAD_PL|LOAD_BS|LOAD_PL_DEPT|LOAD_OPS)\s*\(/i.test(formula);
   }
 
   async function checkHealth() {
