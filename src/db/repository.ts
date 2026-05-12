@@ -2,6 +2,13 @@ import { DatabaseSync } from "node:sqlite";
 import type { BsEnrichedRow, MappingRow, OpsRow, PlDepartmentEnrichedRow, PlEnrichedRow } from "../core/types.js";
 import { schemaSql } from "./schema.js";
 
+export type FunctionCache = {
+  pl: Record<string, number>;
+  bs: Record<string, number>;
+  plDepartment: Record<string, number>;
+  ops: Record<string, number>;
+};
+
 export class LocalActRepository {
   private readonly db: DatabaseSync;
 
@@ -112,9 +119,43 @@ export class LocalActRepository {
     ]);
   }
 
+  getFunctionCache(): FunctionCache {
+    return {
+      pl: this.aggregate("SELECT summary_account, date, SUM(amount) AS value FROM pl_enriched GROUP BY summary_account, date", [
+        "summary_account",
+        "date"
+      ]),
+      bs: this.aggregate("SELECT summary_account, date, SUM(amount) AS value FROM bs_enriched GROUP BY summary_account, date", [
+        "summary_account",
+        "date"
+      ]),
+      plDepartment: this.aggregate(
+        `SELECT summary_account, date, summary_department, SUM(amount) AS value
+         FROM pl_department_enriched
+         GROUP BY summary_account, date, summary_department`,
+        ["summary_account", "date", "summary_department"]
+      ),
+      ops: this.aggregate("SELECT metric_label, date, channel, SUM(amount) AS value FROM ops GROUP BY metric_label, date, channel", [
+        "metric_label",
+        "date",
+        "channel"
+      ])
+    };
+  }
+
   private sum(sql: string, params: (string | number | null)[]): number {
     const row = this.db.prepare(sql).get(...params) as { value?: number } | undefined;
     return Number(row?.value ?? 0);
+  }
+
+  private aggregate(sql: string, keyColumns: string[]): Record<string, number> {
+    const output: Record<string, number> = {};
+    const rows = this.db.prepare(sql).all() as Record<string, unknown>[];
+    for (const row of rows) {
+      const key = keyColumns.map((column) => normalizeCacheKeyPart(row[column])).join("|");
+      output[key] = Number(row.value ?? 0);
+    }
+    return output;
   }
 
   private transaction(fn: () => void): void {
@@ -127,4 +168,8 @@ export class LocalActRepository {
       throw error;
     }
   }
+}
+
+function normalizeCacheKeyPart(value: unknown): string {
+  return String(value ?? "").trim().toLowerCase();
 }

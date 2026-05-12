@@ -1,33 +1,24 @@
 (function () {
   const root = globalThis;
   const baseUrl = "https://localhost:3000";
+  const cacheStorageKey = "localact.functionCache.v1";
 
   async function loadPl(summaryAccount, date) {
-    return runFunction("LOAD_PL", () =>
-      fetchValue("/api/value/pl", { summaryAccount, date: normalizeExactDate(date) }, "LOAD_PL")
-    );
+    return runFunction("LOAD_PL", async () => lookupCachedValue("pl", [summaryAccount, normalizeExactDate(date)]));
   }
 
   async function loadBs(summaryAccount, date) {
-    return runFunction("LOAD_BS", () =>
-      fetchValue("/api/value/bs", { summaryAccount, date: normalizeExactDate(date) }, "LOAD_BS")
-    );
+    return runFunction("LOAD_BS", async () => lookupCachedValue("bs", [summaryAccount, normalizeExactDate(date)]));
   }
 
   async function loadPlDept(summaryAccount, date, summaryDepartment) {
-    return runFunction("LOAD_PL_DEPT", () =>
-      fetchValue(
-        "/api/value/pl-department",
-        { summaryAccount, date: normalizeExactDate(date), summaryDepartment },
-        "LOAD_PL_DEPT"
-      )
+    return runFunction("LOAD_PL_DEPT", async () =>
+      lookupCachedValue("plDepartment", [summaryAccount, normalizeExactDate(date), summaryDepartment])
     );
   }
 
   async function loadOps(metricLabel, date, channel) {
-    return runFunction("LOAD_OPS", () =>
-      fetchValue("/api/value/ops", { metricLabel, date: normalizeExactDate(date), channel }, "LOAD_OPS")
-    );
+    return runFunction("LOAD_OPS", async () => lookupCachedValue("ops", [metricLabel, normalizeExactDate(date), channel]));
   }
 
   function diag() {
@@ -54,6 +45,16 @@
     }
   }
 
+  async function diagCache() {
+    const cache = await readFunctionCache();
+    return [
+      `pl=${Object.keys(cache.pl || {}).length}`,
+      `bs=${Object.keys(cache.bs || {}).length}`,
+      `plDepartment=${Object.keys(cache.plDepartment || {}).length}`,
+      `ops=${Object.keys(cache.ops || {}).length}`
+    ].join("; ");
+  }
+
   function diagDate(date) {
     return normalizeExactDate(date);
   }
@@ -65,6 +66,34 @@
       const message = error instanceof Error ? error.message : String(error);
       return customFunctionError(`${functionName} failed: ${message}`);
     }
+  }
+
+  async function lookupCachedValue(section, keyParts) {
+    const cache = await readFunctionCache();
+    const sectionCache = cache[section] || {};
+    return Number(sectionCache[buildCacheKey(keyParts)] || 0);
+  }
+
+  async function readFunctionCache() {
+    const raw = await readSharedValue(cacheStorageKey);
+    if (!raw) {
+      throw new Error("LocalAct cache is not loaded. Open the LocalAct task pane and run the update button again.");
+    }
+    return JSON.parse(raw);
+  }
+
+  async function readSharedValue(key) {
+    if (root.OfficeRuntime && root.OfficeRuntime.storage) {
+      const value = await root.OfficeRuntime.storage.getItem(key);
+      if (value) {
+        return value;
+      }
+    }
+    return root.localStorage ? root.localStorage.getItem(key) || "" : "";
+  }
+
+  function buildCacheKey(parts) {
+    return parts.map((part) => String(part ?? "").trim().toLowerCase()).join("|");
   }
 
   async function fetchValue(path, params, functionName) {
@@ -142,6 +171,7 @@
     root.CustomFunctions.associate("DIAG", diag);
     root.CustomFunctions.associate("DIAG_BACKEND", diagBackend);
     root.CustomFunctions.associate("DIAG_BACKEND_TEXT", diagBackendText);
+    root.CustomFunctions.associate("DIAG_CACHE", diagCache);
     root.CustomFunctions.associate("DIAG_DATE", diagDate);
     root.CustomFunctions.associate("LOAD_PL", loadPl);
     root.CustomFunctions.associate("LOAD_BS", loadBs);

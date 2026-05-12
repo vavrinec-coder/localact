@@ -5,7 +5,7 @@
            xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
            xsi:type="TaskPaneApp">
   <Id>8b10da10-66dd-4cbd-ad85-a524d6c875bb</Id>
-  <Version>1.0.5.0</Version>
+  <Version>1.0.6.0</Version>
   <ProviderName>XF1 Advisory</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="LocalAct"/>
@@ -93,10 +93,10 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html?v=0.1.5"/>
-        <bt:Url id="Functions.Script.Url" DefaultValue="https://localhost:3000/functions.js?v=0.1.5"/>
-        <bt:Url id="Functions.Page.Url" DefaultValue="https://localhost:3000/functions.html?v=0.1.5"/>
-        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://localhost:3000/functions.json?v=0.1.5"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html?v=0.1.6"/>
+        <bt:Url id="Functions.Script.Url" DefaultValue="https://localhost:3000/functions.js?v=0.1.6"/>
+        <bt:Url id="Functions.Page.Url" DefaultValue="https://localhost:3000/functions.html?v=0.1.6"/>
+        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://localhost:3000/functions.json?v=0.1.6"/>
         <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>

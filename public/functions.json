@@ -22,6 +22,13 @@
       "result": { "type": "string", "dimensionality": "scalar" }
     },
     {
+      "id": "DIAG_CACHE",
+      "name": "DIAG_CACHE",
+      "description": "Diagnostic function that returns how many cached lookup keys are available to formulas.",
+      "parameters": [],
+      "result": { "type": "string", "dimensionality": "scalar" }
+    },
+    {
       "id": "DIAG_DATE",
       "name": "DIAG_DATE",
       "description": "Diagnostic function that returns the exact date LocalAct will send to the backend.",

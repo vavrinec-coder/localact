@@ -1,5 +1,6 @@
 (function () {
   const baseUrl = window.location.origin || "https://localhost:3000";
+  const cacheStorageKey = "localact.functionCache.v1";
   const logList = document.getElementById("logList");
   const serviceStatus = document.getElementById("serviceStatus");
   const footerStatus = document.getElementById("footerStatus");
@@ -47,6 +48,7 @@
       logList.innerHTML = "";
     });
     checkHealth();
+    refreshFunctionCache(false);
     setInterval(checkHealth, 15000);
   });
 
@@ -80,6 +82,7 @@
         return;
       }
       addLog("ok", body.message || `${config.label} updated successfully`, `${body.rowCount} rows imported`);
+      await refreshFunctionCache(false);
     } catch (error) {
       addLog("error", `${config.label} update failed`, error instanceof Error ? error.message : String(error));
     } finally {
@@ -137,6 +140,32 @@
     } catch {
       setStatus("bad", "Local service is not running");
     }
+  }
+
+  async function refreshFunctionCache(showLog) {
+    try {
+      const response = await fetch(`${baseUrl}/api/cache`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const cache = await response.json();
+      const serialized = JSON.stringify(cache);
+      if (window.OfficeRuntime && window.OfficeRuntime.storage) {
+        await window.OfficeRuntime.storage.setItem(cacheStorageKey, serialized);
+      }
+      window.localStorage.setItem(cacheStorageKey, serialized);
+      if (showLog) {
+        addLog("ok", "Formula cache refreshed", summarizeCache(cache));
+      }
+    } catch (error) {
+      if (showLog) {
+        addLog("error", "Formula cache refresh failed", error instanceof Error ? error.message : String(error));
+      }
+    }
+  }
+
+  function summarizeCache(cache) {
+    return `P&L ${Object.keys(cache.pl || {}).length}; BS ${Object.keys(cache.bs || {}).length}; Departments ${Object.keys(cache.plDepartment || {}).length}; Ops ${Object.keys(cache.ops || {}).length}`;
   }
 
   function setStatus(state, text) {

@@ -49,6 +49,9 @@ describe("LocalAct API", () => {
         .expect(200);
 
       expect(lookup.body).toEqual({ value: 100 });
+
+      const cache = await request(app).get("/api/cache").expect(200);
+      expect(cache.body.pl["net revenue|2026-04-30"]).toBe(100);
     } finally {
       cleanup();
     }

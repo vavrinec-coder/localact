@@ -4,7 +4,7 @@ import vm from "node:vm";
 
 type AssociateMap = Record<string, (...args: unknown[]) => unknown>;
 
-function loadCustomFunctions(fetchImpl: typeof fetch = fetch): AssociateMap {
+function loadCustomFunctions(fetchImpl: typeof fetch = fetch, storage: Record<string, string> = {}): AssociateMap {
   const associates: AssociateMap = {};
   const source = fs.readFileSync(path.resolve("public/functions.js"), "utf8");
   const context = vm.createContext({
@@ -27,6 +27,18 @@ function loadCustomFunctions(fetchImpl: typeof fetch = fetch): AssociateMap {
       associate(name: string, fn: (...args: unknown[]) => unknown) {
         associates[name] = fn;
       }
+    },
+    OfficeRuntime: {
+      storage: {
+        async getItem(key: string) {
+          return storage[key] || "";
+        }
+      }
+    },
+    localStorage: {
+      getItem(key: string) {
+        return storage[key] || "";
+      }
     }
   });
 
@@ -42,6 +54,7 @@ describe("custom functions", () => {
       "DIAG",
       "DIAG_BACKEND",
       "DIAG_BACKEND_TEXT",
+      "DIAG_CACHE",
       "DIAG_DATE",
       "LOAD_BS",
       "LOAD_OPS",
@@ -58,14 +71,17 @@ describe("custom functions", () => {
     expect(associates.DIAG_DATE("30/Apr/26")).toBe("2026-04-30");
   });
 
-  it("calls the P&L lookup endpoint with normalized parameters", async () => {
-    let requestedUrl = "";
-    const associates = loadCustomFunctions((async (url: string) => {
-      requestedUrl = url;
-      return new Response(JSON.stringify({ value: -57464.56 }), { status: 200 });
-    }) as typeof fetch);
+  it("loads P&L values from the shared formula cache", async () => {
+    const associates = loadCustomFunctions(fetch, {
+      "localact.functionCache.v1": JSON.stringify({
+        pl: { "discounts|2026-04-30": -57464.56 },
+        bs: {},
+        plDepartment: {},
+        ops: {}
+      })
+    });
 
+    await expect(associates.DIAG_CACHE()).resolves.toBe("pl=1; bs=0; plDepartment=0; ops=0");
     await expect(associates.LOAD_PL("Discounts", "30/Apr/26")).resolves.toBe(-57464.56);
-    expect(requestedUrl).toBe("https://localhost:3000/api/value/pl?summaryAccount=Discounts&date=2026-04-30");
   });
 });

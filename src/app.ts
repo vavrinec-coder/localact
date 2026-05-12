@@ -93,6 +93,10 @@ export function createApp(repo: LocalActRepository): express.Express {
     });
   });
 
+  app.get("/api/cache", (_req, res) => {
+    res.json(repo.getFunctionCache());
+  });
+
   return app;
 }
 

@@ -27,6 +27,7 @@ describe("LocalActRepository", () => {
         ]
       );
       expect(repo.sumPl("Net Revenue", "2026-04-30")).toBe(25);
+      expect(repo.getFunctionCache().pl["net revenue|2026-04-30"]).toBe(25);
 
       repo.replacePl([{ key: "COGS", summary: "COGS" }], [{ accountLabel: "COGS", summaryAccount: "COGS", date: "2026-04-30", amount: 7 }]);
       expect(repo.sumPl("Net Revenue", "2026-04-30")).toBe(0);
