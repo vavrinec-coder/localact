@@ -92,10 +92,7 @@
   }
 
   async function convertFormulasToValues() {
-    if (!confirm("Convert LocalAct formulas on the active worksheet to static values?")) {
-      return;
-    }
-
+    addLog("ok", "Formula conversion started", "Scanning the active worksheet.");
     try {
       await Excel.run(async (context) => {
         const sheet = context.workbook.worksheets.getActiveWorksheet();
