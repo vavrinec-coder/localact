@@ -43,6 +43,7 @@ export type BsEnrichedRow = PlEnrichedRow;
 
 export type OpsRow = {
   metricLabel: string;
+  product: string;
   date: string;
   channel: string;
   amount: number;

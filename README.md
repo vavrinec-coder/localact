@@ -38,7 +38,7 @@ Each update replaces all existing data for that section. Text fields are trimmed
 - P&L: `PL_Data` plus `PL_Mapping`
 - P&L by Departments: `PL_Department_Data` plus `Department_Mapping`; reuses the current `PL_Mapping`
 - Balance Sheet: `BS_Data` plus `BS_Mapping`
-- Operations: `Ops`
+- Operations: `Ops` with `Metric label`, `Product`, `Date`, `Channel`, `Amount`
 
 ## Custom Functions
 
@@ -48,7 +48,7 @@ Use these formulas in Excel:
 =LocalAct.LOAD_PL(summary_account, date)
 =LocalAct.LOAD_BS(summary_account, date)
 =LocalAct.LOAD_PL_DEPT(summary_account, date, summary_department)
-=LocalAct.LOAD_OPS(metric_label, date, channel)
+=LocalAct.LOAD_OPS(metric_label, product, date, channel)
 ```
 
 Dates are exact Excel dates and should be month-end dates.

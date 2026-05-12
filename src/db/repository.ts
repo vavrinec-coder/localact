@@ -16,6 +16,8 @@ export class LocalActRepository {
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA foreign_keys = ON;");
     this.db.exec(schemaSql);
+    this.migrateOpsProductColumn();
+    this.db.exec("CREATE INDEX IF NOT EXISTS idx_ops_lookup ON ops(metric_label, product, date, channel);");
   }
 
   close(): void {
@@ -81,9 +83,9 @@ export class LocalActRepository {
   replaceOps(rows: OpsRow[]): void {
     this.transaction(() => {
       this.db.exec("DELETE FROM ops;");
-      const insertRow = this.db.prepare("INSERT INTO ops (metric_label, date, channel, amount) VALUES (?, ?, ?, ?)");
+      const insertRow = this.db.prepare("INSERT INTO ops (metric_label, product, date, channel, amount) VALUES (?, ?, ?, ?, ?)");
       for (const row of rows) {
-        insertRow.run(row.metricLabel, row.date, row.channel, row.amount);
+        insertRow.run(row.metricLabel, row.product, row.date, row.channel, row.amount);
       }
     });
   }
@@ -111,9 +113,10 @@ export class LocalActRepository {
     ]);
   }
 
-  sumOps(metricLabel: string, date: string, channel: string): number {
-    return this.sum("SELECT COALESCE(SUM(amount), 0) AS value FROM ops WHERE metric_label = ? AND date = ? AND channel = ?", [
+  sumOps(metricLabel: string, product: string, date: string, channel: string): number {
+    return this.sum("SELECT COALESCE(SUM(amount), 0) AS value FROM ops WHERE metric_label = ? AND product = ? AND date = ? AND channel = ?", [
       metricLabel,
+      product,
       date,
       channel
     ]);
@@ -135,8 +138,9 @@ export class LocalActRepository {
          GROUP BY summary_account, date, summary_department`,
         ["summary_account", "date", "summary_department"]
       ),
-      ops: this.aggregate("SELECT metric_label, date, channel, SUM(amount) AS value FROM ops GROUP BY metric_label, date, channel", [
+      ops: this.aggregate("SELECT metric_label, product, date, channel, SUM(amount) AS value FROM ops GROUP BY metric_label, product, date, channel", [
         "metric_label",
+        "product",
         "date",
         "channel"
       ])
@@ -166,6 +170,15 @@ export class LocalActRepository {
     } catch (error) {
       this.db.exec("ROLLBACK;");
       throw error;
+    }
+  }
+
+  private migrateOpsProductColumn(): void {
+    const columns = this.db.prepare("PRAGMA table_info(ops)").all() as { name: string }[];
+    const hasProduct = columns.some((column) => column.name === "product");
+    if (!hasProduct) {
+      this.db.exec("DROP INDEX IF EXISTS idx_ops_lookup;");
+      this.db.exec("ALTER TABLE ops ADD COLUMN product TEXT NOT NULL DEFAULT '';");
     }
   }
 }

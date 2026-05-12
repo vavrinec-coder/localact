@@ -90,11 +90,12 @@ export function buildBsImport(dataRows: RawRow[], mappingRows: RawRow[]): Enrich
 }
 
 export function buildOpsImport(dataRows: RawRow[]): BuildResult<OpsRow> {
-  const errors = assertColumns(dataRows, ["Metric label", "Date", "Channel", "Amount"], "Ops");
+  const errors = assertColumns(dataRows, ["Metric label", "Product", "Date", "Channel", "Amount"], "Ops");
   const rows = dataRows.map((row, index) => {
     const rowNumber = index + 2;
     return {
       metricLabel: readText(row, "Metric label", errors, rowNumber),
+      product: readText(row, "Product", errors, rowNumber),
       date: readExcelDate(row, "Date", errors, rowNumber),
       channel: readText(row, "Channel", errors, rowNumber),
       amount: readAmount(row, "Amount", errors, rowNumber)

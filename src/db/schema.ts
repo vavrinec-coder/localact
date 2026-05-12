@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS bs_enriched (
 
 CREATE TABLE IF NOT EXISTS ops (
   metric_label TEXT NOT NULL,
+  product TEXT NOT NULL,
   date TEXT NOT NULL,
   channel TEXT NOT NULL,
   amount REAL NOT NULL
@@ -47,5 +48,4 @@ CREATE TABLE IF NOT EXISTS ops (
 CREATE INDEX IF NOT EXISTS idx_pl_lookup ON pl_enriched(summary_account, date);
 CREATE INDEX IF NOT EXISTS idx_pl_dept_lookup ON pl_department_enriched(summary_account, date, summary_department);
 CREATE INDEX IF NOT EXISTS idx_bs_lookup ON bs_enriched(summary_account, date);
-CREATE INDEX IF NOT EXISTS idx_ops_lookup ON ops(metric_label, date, channel);
 `;

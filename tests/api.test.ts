@@ -103,4 +103,36 @@ describe("LocalAct API", () => {
       cleanup();
     }
   });
+
+  it("imports operations rows and returns product-specific lookup values", async () => {
+    const { app, cleanup } = makeApp();
+    try {
+      await request(app)
+        .post("/api/import/ops")
+        .send({
+          ops: [
+            { "Metric label": "Orders", Product: " Device ", Date: "2026-04-30", Channel: "Amazon", Amount: 3 },
+            { "Metric label": "Orders", Product: "Device", Date: "2026-04-30", Channel: "Amazon", Amount: 4 },
+            { "Metric label": "Orders", Product: "Service", Date: "2026-04-30", Channel: "Amazon", Amount: 10 }
+          ]
+        })
+        .expect(200)
+        .expect((response) => {
+          expect(response.body).toMatchObject({ ok: true, rowCount: 3 });
+        });
+
+      const lookup = await request(app)
+        .get("/api/value/ops")
+        .query({ metricLabel: "Orders", product: "Device", date: "2026-04-30", channel: "Amazon" })
+        .expect(200);
+
+      expect(lookup.body).toEqual({ value: 7 });
+
+      const cache = await request(app).get("/api/cache").expect(200);
+      expect(cache.body.ops["orders|device|2026-04-30|amazon"]).toBe(7);
+      expect(cache.body.ops["orders|service|2026-04-30|amazon"]).toBe(10);
+    } finally {
+      cleanup();
+    }
+  });
 });

@@ -76,12 +76,12 @@ describe("import builders", () => {
 
   it("builds operations rows with raw channel values", () => {
     const result = buildOpsImport([
-      { "Metric label": "Orders", Date: new Date("2026-04-30T00:00:00Z"), Channel: " Amazon ", Amount: 8 }
+      { "Metric label": "Orders", Product: " Device ", Date: new Date("2026-04-30T00:00:00Z"), Channel: " Amazon ", Amount: 8 }
     ]);
 
     expect(result.errors).toEqual([]);
     expect(result.rows).toEqual([
-      { metricLabel: "Orders", date: "2026-04-30", channel: "Amazon", amount: 8 }
+      { metricLabel: "Orders", product: "Device", date: "2026-04-30", channel: "Amazon", amount: 8 }
     ]);
   });
 });

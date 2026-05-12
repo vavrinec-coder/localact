@@ -17,8 +17,8 @@
     );
   }
 
-  async function loadOps(metricLabel, date, channel) {
-    return runFunction("LOAD_OPS", async () => lookupCachedValue("ops", [metricLabel, normalizeExactDate(date), channel]));
+  async function loadOps(metricLabel, product, date, channel) {
+    return runFunction("LOAD_OPS", async () => lookupCachedValue("ops", [metricLabel, product, normalizeExactDate(date), channel]));
   }
 
   function diag() {

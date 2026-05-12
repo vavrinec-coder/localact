@@ -71,9 +71,10 @@
     {
       "id": "LOAD_OPS",
       "name": "LOAD_OPS",
-      "description": "Returns the summed operations amount for one metric label, exact date, and raw channel.",
+      "description": "Returns the summed operations amount for one metric label, product, exact date, and raw channel.",
       "parameters": [
         { "name": "metric_label", "description": "Metric label.", "type": "string", "dimensionality": "scalar" },
+        { "name": "product", "description": "Product.", "type": "string", "dimensionality": "scalar" },
         { "name": "date", "description": "Exact Excel date.", "type": "any", "dimensionality": "scalar" },
         { "name": "channel", "description": "Raw Channel.", "type": "string", "dimensionality": "scalar" }
       ],

@@ -89,7 +89,12 @@ export function createApp(repo: LocalActRepository): express.Express {
 
   app.get("/api/value/ops", (req, res) => {
     res.json({
-      value: repo.sumOps(requiredQuery(req, "metricLabel"), requiredQuery(req, "date"), requiredQuery(req, "channel"))
+      value: repo.sumOps(
+        requiredQuery(req, "metricLabel"),
+        requiredQuery(req, "product"),
+        requiredQuery(req, "date"),
+        requiredQuery(req, "channel")
+      )
     });
   });
 
