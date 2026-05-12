@@ -29,6 +29,8 @@ Use `manifest.xml` for local sideloading. It points Excel to:
 - `https://localhost:3000/functions.js`
 - `https://localhost:3000/functions.json`
 
+LocalAct uses Excel's shared runtime so the task pane and custom functions run in the same Office webview.
+
 ## Imports
 
 Each update replaces all existing data for that section. Text fields are trimmed. Missing required mappings block the update.
