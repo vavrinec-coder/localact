@@ -1,0 +1,5 @@
+node_modules/
+data/
+.localact-server.pid
+.DS_Store
+npm-debug.log*

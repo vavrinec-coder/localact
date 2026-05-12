@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LocalAct</title>
+    <link rel="icon" href="/assets/icon-32.png" />
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link rel="stylesheet" href="/taskpane.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>LocalAct</h1>
+        <p>Local Excel Add-in</p>
+      </div>
+      <div class="status" id="serviceStatus">
+        <span class="dot dot-warn"></span>
+        <span>Checking service</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="left">
+        <div class="section">
+          <h2><span>1.</span> Update P&amp;L</h2>
+          <div class="file-row"><label>PL_Data</label><input id="plData" type="file" accept=".xlsx" /></div>
+          <div class="file-row"><label>PL_Mapping</label><input id="plMapping" type="file" accept=".xlsx" /></div>
+          <button id="updatePl">Update P&amp;L</button>
+        </div>
+
+        <div class="section">
+          <h2><span>2.</span> Update P&amp;L by Departments</h2>
+          <div class="file-row"><label>PL_Department_Data</label><input id="plDepartmentData" type="file" accept=".xlsx" /></div>
+          <div class="file-row"><label>Department_Mapping</label><input id="departmentMapping" type="file" accept=".xlsx" /></div>
+          <p class="hint">Uses current PL_Mapping for Summary Account.</p>
+          <button id="updatePlDepartment">Update P&amp;L by Departments</button>
+        </div>
+
+        <div class="section">
+          <h2><span>3.</span> Update BS</h2>
+          <div class="file-row"><label>BS_Data</label><input id="bsData" type="file" accept=".xlsx" /></div>
+          <div class="file-row"><label>BS_Mapping</label><input id="bsMapping" type="file" accept=".xlsx" /></div>
+          <button id="updateBs">Update BS</button>
+        </div>
+
+        <div class="section">
+          <h2><span>4.</span> Update Operations</h2>
+          <div class="file-row"><label>Ops</label><input id="ops" type="file" accept=".xlsx" /></div>
+          <button id="updateOps">Update Operations</button>
+        </div>
+
+        <div class="section formulas">
+          <h2><span>5.</span> Formulas to Values</h2>
+          <p>Convert LocalAct formulas in the active worksheet to static values.</p>
+          <button id="convertFormulas">Convert Formulas to Values</button>
+        </div>
+      </section>
+
+      <aside>
+        <div class="note">
+          <h3>Validation &amp; Notes</h3>
+          <ul>
+            <li>Text columns are trimmed before validation and storage.</li>
+            <li>Each update replaces existing data for that section.</li>
+            <li>Missing mappings block the update.</li>
+            <li>Dates must be true month-end Excel dates.</li>
+          </ul>
+        </div>
+
+        <div class="note">
+          <h3>Custom Functions</h3>
+          <code>LocalAct.LOAD_PL(summary_account, date)</code>
+          <code>LocalAct.LOAD_BS(summary_account, date)</code>
+          <code>LocalAct.LOAD_PL_DEPT(summary_account, date, summary_department)</code>
+          <code>LocalAct.LOAD_OPS(metric_label, date, channel)</code>
+          <p>Returns sum of matching rows; returns 0 if no match.</p>
+        </div>
+      </aside>
+    </main>
+
+    <section class="log-panel">
+      <div class="log-header">
+        <h2>Import Log</h2>
+        <button class="link-button" id="clearLog">Clear log</button>
+      </div>
+      <div id="logList" class="log-list"></div>
+    </section>
+
+    <footer>
+      <span>LocalAct v0.1.0</span>
+      <span id="footerStatus">Disconnected</span>
+    </footer>
+
+    <script src="/taskpane.js"></script>
+  </body>
+</html>
