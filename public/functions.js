@@ -43,6 +43,17 @@
     }
   }
 
+  async function diagBackendText() {
+    try {
+      const response = await fetch(`${baseUrl}/health`);
+      const text = await response.text();
+      return `status=${response.status}; body=${text.slice(0, 120)}`;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return `error=${message}`;
+    }
+  }
+
   function diagDate(date) {
     return normalizeExactDate(date);
   }
@@ -130,6 +141,7 @@
   if (root.CustomFunctions && root.CustomFunctions.associate) {
     root.CustomFunctions.associate("DIAG", diag);
     root.CustomFunctions.associate("DIAG_BACKEND", diagBackend);
+    root.CustomFunctions.associate("DIAG_BACKEND_TEXT", diagBackendText);
     root.CustomFunctions.associate("DIAG_DATE", diagDate);
     root.CustomFunctions.associate("LOAD_PL", loadPl);
     root.CustomFunctions.associate("LOAD_BS", loadBs);

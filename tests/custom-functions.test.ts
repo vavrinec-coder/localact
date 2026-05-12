@@ -41,6 +41,7 @@ describe("custom functions", () => {
     expect(Object.keys(associates).sort()).toEqual([
       "DIAG",
       "DIAG_BACKEND",
+      "DIAG_BACKEND_TEXT",
       "DIAG_DATE",
       "LOAD_BS",
       "LOAD_OPS",
