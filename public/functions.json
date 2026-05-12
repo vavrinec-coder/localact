@@ -1,6 +1,29 @@
 {
   "functions": [
     {
+      "id": "DIAG",
+      "name": "DIAG",
+      "description": "Diagnostic function that confirms the LocalAct custom function runtime can execute JavaScript.",
+      "parameters": [],
+      "result": { "type": "number", "dimensionality": "scalar" }
+    },
+    {
+      "id": "DIAG_BACKEND",
+      "name": "DIAG_BACKEND",
+      "description": "Diagnostic function that confirms the LocalAct custom function runtime can reach the local backend.",
+      "parameters": [],
+      "result": { "type": "number", "dimensionality": "scalar" }
+    },
+    {
+      "id": "DIAG_DATE",
+      "name": "DIAG_DATE",
+      "description": "Diagnostic function that returns the exact date LocalAct will send to the backend.",
+      "parameters": [
+        { "name": "date", "description": "Exact Excel date.", "type": "any", "dimensionality": "scalar" }
+      ],
+      "result": { "type": "string", "dimensionality": "scalar" }
+    },
+    {
       "id": "LOAD_PL",
       "name": "LOAD_PL",
       "description": "Returns the summed P&L amount for one summary account and exact date.",
