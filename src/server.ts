@@ -2,7 +2,7 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import path from "node:path";
-import selfsigned from "selfsigned";
+import devCerts from "office-addin-dev-certs";
 import { createApp } from "./app.js";
 import { LocalActRepository } from "./db/repository.js";
 
@@ -15,12 +15,9 @@ fs.mkdirSync(dataDir, { recursive: true });
 
 const repo = new LocalActRepository(dbPath);
 const app = createApp(repo);
-const cert = selfsigned.generate([{ name: "commonName", value: "localhost" }], {
-  days: 365,
-  keySize: 2048
-});
+const httpsOptions = await devCerts.getHttpsServerOptions();
 
-const server = https.createServer({ key: cert.private, cert: cert.cert }, app);
+const server = https.createServer(httpsOptions, app);
 const httpPreviewServer = httpPreviewPort ? http.createServer(app) : undefined;
 
 server.listen(port, () => {

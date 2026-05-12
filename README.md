@@ -11,12 +11,13 @@ LocalAct is a local-only Excel web add-in for importing standardized `.xlsx` act
 
 ```powershell
 npm install
+npx office-addin-dev-certs install --days 365
 npm start
 ```
 
 The service starts at `https://localhost:3000` and stores the SQLite database at `data/localact.sqlite`.
 
-The local HTTPS certificate is self-signed. The first browser visit to `https://localhost:3000/health` may require accepting the local certificate warning before Excel can load the add-in cleanly.
+The certificate command installs a trusted localhost certificate for Office add-in testing. Run it once on this computer, then restart Excel.
 
 For browser-only UI preview, start with `LOCALACT_HTTP_PORT=3001 npm start` and open `http://localhost:3001/taskpane.html`. Excel should still use the HTTPS manifest URL.
 
