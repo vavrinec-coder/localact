@@ -1,9 +1,11 @@
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 import type { RawRow } from "./core/types.js";
 
 export async function workbookBufferToRows(buffer: Buffer): Promise<RawRow[]> {
   const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer as never);
+  const readableBuffer = await repairWorkbookContentTypes(buffer);
+  await workbook.xlsx.load(readableBuffer as never);
   const worksheet = workbook.worksheets[0];
   if (!worksheet) {
     return [];
@@ -36,6 +38,52 @@ export async function workbookBufferToRows(buffer: Buffer): Promise<RawRow[]> {
   });
 
   return rows;
+}
+
+async function repairWorkbookContentTypes(buffer: Buffer): Promise<Buffer> {
+  const zip = await JSZip.loadAsync(buffer);
+  const contentTypesFile = zip.file("[Content_Types].xml");
+  if (!contentTypesFile) {
+    return buffer;
+  }
+
+  let contentTypes = await contentTypesFile.async("string");
+  const hasWorkbookOverride = contentTypes.includes('PartName="/xl/workbook.xml"');
+  const hasInvalidXmlDefault = contentTypes.includes(
+    'Extension="xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"'
+  );
+  if (hasWorkbookOverride && !hasInvalidXmlDefault) {
+    return buffer;
+  }
+
+  contentTypes = contentTypes.replace(
+    'Extension="xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"',
+    'Extension="xml" ContentType="application/xml"'
+  );
+
+  const workbookContentType = [
+    '<Override PartName="/xl/workbook.xml"',
+    ' ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" />'
+  ].join("");
+  const repairedContentTypes = hasWorkbookOverride ? contentTypes : contentTypes.replace("</Types>", `${workbookContentType}</Types>`);
+  zip.file("[Content_Types].xml", repairedContentTypes);
+  await normalizeSpreadsheetNamespacePrefix(zip);
+  return Buffer.from(await zip.generateAsync({ type: "nodebuffer" }));
+}
+
+async function normalizeSpreadsheetNamespacePrefix(zip: JSZip): Promise<void> {
+  const xmlFiles = Object.values(zip.files).filter((file) => !file.dir && file.name.endsWith(".xml"));
+  await Promise.all(
+    xmlFiles.map(async (file) => {
+      let xml = await file.async("string");
+      if (!xml.includes("<x:") && !xml.includes("</x:") && !xml.includes("<tableParts")) {
+        return;
+      }
+      xml = xml.replace(/<x:tableParts[\s\S]*?<\/x:tableParts>/g, "");
+      xml = xml.replace(/<tableParts[\s\S]*?<\/tableParts>/g, "");
+      zip.file(file.name, xml.replace(/(<\/?)(x):/g, "$1"));
+    })
+  );
 }
 
 function normalizeCellValue(value: ExcelJS.CellValue): unknown {

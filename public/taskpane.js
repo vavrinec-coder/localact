@@ -76,7 +76,7 @@
         method: "POST",
         body: formData
       });
-      const body = await response.json();
+      const body = await readJsonResponse(response);
       if (!response.ok) {
         addLog("error", body.message || `${config.label} update blocked`, (body.errors || []).join("; "));
         return;
@@ -88,6 +88,18 @@
     } finally {
       button.disabled = false;
       checkHealth();
+    }
+  }
+
+  async function readJsonResponse(response) {
+    const text = await response.text();
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      return {
+        message: "LocalAct returned an unreadable response",
+        errors: [text.slice(0, 300)]
+      };
     }
   }
 

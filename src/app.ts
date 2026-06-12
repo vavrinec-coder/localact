@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import cors from "cors";
-import express, { type Request, type Response } from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
 import { buildBsImport, buildOpsImport, buildPlDepartmentImport, buildPlImport } from "./core/imports.js";
 import type { RawRow } from "./core/types.js";
@@ -22,7 +22,8 @@ export function createApp(repo: LocalActRepository): express.Express {
     res.json({ ok: true, service: "LocalAct" });
   });
 
-  app.post("/api/import/pl", upload.any(), async (req, res) => {
+  app.post("/api/import/pl", upload.any(), async (req, res, next) => {
+    try {
     const plData = await rowsFromRequest(req, "plData", "plData");
     const plMapping = await rowsFromRequest(req, "plMapping", "plMapping");
     const result = buildPlImport(plData, plMapping);
@@ -31,9 +32,13 @@ export function createApp(repo: LocalActRepository): express.Express {
     }
     repo.replacePl(result.mappings ?? [], result.enrichedRows);
     return res.json({ ok: true, message: "P&L updated successfully", rowCount: result.enrichedRows.length });
+    } catch (error) {
+      return next(error);
+    }
   });
 
-  app.post("/api/import/pl-department", upload.any(), async (req, res) => {
+  app.post("/api/import/pl-department", upload.any(), async (req, res, next) => {
+    try {
     const plDepartmentData = await rowsFromRequest(req, "plDepartmentData", "plDepartmentData");
     const departmentMapping = await rowsFromRequest(req, "departmentMapping", "departmentMapping");
     const result = buildPlDepartmentImport(plDepartmentData, repo.getPlMappings(), departmentMapping);
@@ -46,9 +51,13 @@ export function createApp(repo: LocalActRepository): express.Express {
       message: "P&L by Departments updated successfully",
       rowCount: result.enrichedRows.length
     });
+    } catch (error) {
+      return next(error);
+    }
   });
 
-  app.post("/api/import/bs", upload.any(), async (req, res) => {
+  app.post("/api/import/bs", upload.any(), async (req, res, next) => {
+    try {
     const bsData = await rowsFromRequest(req, "bsData", "bsData");
     const bsMapping = await rowsFromRequest(req, "bsMapping", "bsMapping");
     const result = buildBsImport(bsData, bsMapping);
@@ -57,9 +66,13 @@ export function createApp(repo: LocalActRepository): express.Express {
     }
     repo.replaceBs(result.mappings ?? [], result.enrichedRows);
     return res.json({ ok: true, message: "Balance Sheet updated successfully", rowCount: result.enrichedRows.length });
+    } catch (error) {
+      return next(error);
+    }
   });
 
-  app.post("/api/import/ops", upload.any(), async (req, res) => {
+  app.post("/api/import/ops", upload.any(), async (req, res, next) => {
+    try {
     const ops = await rowsFromRequest(req, "ops", "ops");
     const result = buildOpsImport(ops);
     if (result.errors.length > 0) {
@@ -67,6 +80,9 @@ export function createApp(repo: LocalActRepository): express.Express {
     }
     repo.replaceOps(result.rows);
     return res.json({ ok: true, message: "Operations updated successfully", rowCount: result.rows.length });
+    } catch (error) {
+      return next(error);
+    }
   });
 
   app.get("/api/value/pl", (req, res) => {
@@ -100,6 +116,15 @@ export function createApp(repo: LocalActRepository): express.Express {
 
   app.get("/api/cache", (_req, res) => {
     res.json(repo.getFunctionCache());
+  });
+
+  app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    const message = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({
+      ok: false,
+      message: "LocalAct import failed",
+      errors: [message]
+    });
   });
 
   return app;
